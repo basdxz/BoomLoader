@@ -2,14 +2,18 @@ package com.basdxz.boomload;
 
 import com.falsepattern.lib.api.DependencyLoader;
 import com.falsepattern.lib.api.SemanticVersion;
+import com.google.common.collect.ImmutableSet;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import io.github.classgraph.ClassGraph;
 import lombok.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sun.misc.Unsafe;
 
 import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -20,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BoomLoad {
     private static final Logger LOG = LogManager.getLogger(Tags.MODNAME);
 
-    public static final String[] EXCLUDED_PACKAGES = new String[]{
+    public static final Set<String> EXCLUDED_PACKAGES = ImmutableSet.of(
             "org.lwjgl",
             "com.sun",
             "jdk",
@@ -46,8 +50,10 @@ public class BoomLoad {
             "gnu.trove",
             "com.google",
             "com.typesafe",
-            "com.mojang"};
-    public static final List<Class> loadedClasses = new ArrayList<>();
+            "com.mojang"
+    );
+    public static final Set<String> EXCLUDED_CLASSES = ImmutableSet.of();//"com.rwtema.extrautils.core.TestTransformer"
+    public static final Set<Class> loadedClasses = new HashSet<>();
 
     static {
         DependencyLoader.addMavenRepo("https://repo1.maven.org/maven2/");
@@ -64,12 +70,19 @@ public class BoomLoad {
     @Mod.EventHandler
     @SneakyThrows
     public void postInit(FMLPostInitializationEvent event) {
+        cheekySecurity();
+
         val mappings = notchToSRG();
         val failCount = new AtomicInteger();
 
-        @Cleanup val scanResult = new ClassGraph().enableAllInfo().rejectPackages(EXCLUDED_PACKAGES).scan();
+        @Cleanup val scanResult = new ClassGraph()
+                .enableAllInfo()
+                .rejectPackages(EXCLUDED_PACKAGES.toArray(new String[0])).scan();
         scanResult.getAllClasses().forEach(c -> {
             var className = c.getName();
+            if (EXCLUDED_CLASSES.contains(className))
+                return;
+
             if (className.contains("$")) {
                 val index = className.indexOf("$");
                 val prefix = className.substring(0, index);
@@ -95,6 +108,27 @@ public class BoomLoad {
         LOG.info("Failed: " + failCount);
 
         iSleep();
+    }
+
+    @SneakyThrows
+    private void cheekySecurity() {
+        Method gdf0 = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
+        gdf0.setAccessible(true);
+        Field[] fields = (Field[]) gdf0.invoke(System.class, false);
+        Field securityField = null;
+        for (val field : fields) {
+            if (field.getName().equals("security")) {
+                securityField = field;
+                break;
+            }
+        }
+        Field unsafe = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafe.setAccessible(true);
+        Unsafe theUnsafe = (Unsafe) unsafe.get(null);
+        Object theStaticSystem = theUnsafe.staticFieldBase(securityField);
+        long theSecurityOffset = theUnsafe.staticFieldOffset(securityField);
+        theUnsafe.putObject(theStaticSystem, theSecurityOffset, null);
+        System.setSecurityManager(new ExplosiveManager());
     }
 
     @SneakyThrows
