@@ -16,12 +16,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Mod(modid = Tags.MODID, version = Tags.VERSION, name = Tags.MODNAME, acceptedMinecraftVersions = "[1.7.10]",
         dependencies = "required-after:falsepatternlib")
 public class BoomLoad {
+    private static final Logger LOG = LogManager.getLogger(Tags.MODNAME);
     public static final Set<Class> setOfAllClasses = new HashSet<>();
-
-    private static Logger LOG = LogManager.getLogger(Tags.MODID);
-
-    @Mod.EventHandler
-    public void postInit(FMLPostInitializationEvent event) {
+    
+    static {
         DependencyLoader.addMavenRepo("https://repo1.maven.org/maven2/");
         DependencyLoader.builder()
                 .loadingModId(Tags.MODID)
@@ -31,7 +29,10 @@ public class BoomLoad {
                 .maxVersion(new SemanticVersion(4, 8, Integer.MAX_VALUE))
                 .preferredVersion(new SemanticVersion(4, 8, 138))
                 .build();
+    }
 
+    @Mod.EventHandler
+    public void postInit(FMLPostInitializationEvent event) {
         AtomicInteger failCount = new AtomicInteger();
         try (ScanResult scanResult = new ClassGraph().enableAllInfo().rejectPackages("org.lwjgl").scan()) {
             scanResult.getAllClasses().forEach(c -> {
@@ -47,7 +48,7 @@ public class BoomLoad {
         }
 
         LOG.info("Loading complete!");
-        LOG.info("Tried: " + setOfAllClasses.size() + failCount);
+        LOG.info("Tried: " + (setOfAllClasses.size() + failCount.getAndIncrement()));
         LOG.info("Succeeded: " + setOfAllClasses.size());
         LOG.info("Failed: " + failCount);
     }
