@@ -1,5 +1,9 @@
 // Add your dependencies here
 
 dependencies {
+    compileOnly("io.github.classgraph:classgraph:4.8.138")
 
+    compile("com.falsepattern:falsepatternlib:1.7.10-0.3.2:dev") {
+        transitive = false
+    }
 }

@@ -2,17 +2,19 @@
   {
     "modid": "${modId}",
     "name": "${modName}",
-    "description": "An example mod for Minecraft 1.7.10 with Forge focussed on a stable setup.",
+    "description": "A mod to load all classes in your current classpath.",
     "version": "${modVersion}",
     "mcversion": "${minecraftVersion}",
-    "url": "https://github.com/SinTh0r4s/MyMod",
+    "url": "https://github.com/basdxz/BoomLoad",
     "updateUrl": "",
     "authorList": [
-      "SinTho0r4s"
+      "basdxz"
     ],
     "credits": "",
     "logoFile": "",
     "screenshots": [],
-    "dependencies": []
+    "dependencies": [
+      "falsepatternlib"
+    ]
   }
 ]
