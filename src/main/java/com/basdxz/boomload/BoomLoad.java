@@ -5,24 +5,49 @@ import com.falsepattern.lib.api.SemanticVersion;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ScanResult;
+import lombok.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sun.reflect.ReflectionFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Mod(modid = Tags.MODID, version = Tags.VERSION, name = Tags.MODNAME, acceptedMinecraftVersions = "[1.7.10]",
-        dependencies = "required-after:falsepatternlib")
+        dependencies = "required-after:falsepatternlib;after:*")
 public class BoomLoad {
     private static final Logger LOG = LogManager.getLogger(Tags.MODNAME);
 
-    public static final ReflectionFactory reflectionFactory = ReflectionFactory.getReflectionFactory();
-    public static final List<Class> setOfAllClasses = new ArrayList<>();
-    public static final List<Object> setOfAllObjects = new ArrayList<>();
-
+    public static final String[] EXCLUDED_PACKAGES = new String[]{
+            "org.lwjgl",
+            "com.sun",
+            "jdk",
+            "javafx",
+            "scala",
+            "com.ibm",
+            "io.netty",
+            "akka",
+            "java",
+            "sun",
+            "netscape",
+            "com.jcraft",
+            "org.apache",
+            "tv.twitch",
+            "paulscode",
+            "org.multimc",
+            "nonapi.io.github.classgraph",
+            "net.java",
+            "LZMA",
+            "joptsimple",
+            "javax",
+            "ibxm",
+            "gnu.trove",
+            "com.google",
+            "com.typesafe",
+            "com.mojang"};
+    public static final List<Class> loadedClasses = new ArrayList<>();
 
     static {
         DependencyLoader.addMavenRepo("https://repo1.maven.org/maven2/");
@@ -37,35 +62,65 @@ public class BoomLoad {
     }
 
     @Mod.EventHandler
+    @SneakyThrows
     public void postInit(FMLPostInitializationEvent event) {
-        AtomicInteger failCount = new AtomicInteger();
-        try (ScanResult scanResult = new ClassGraph().enableAllInfo().acceptPackages("net.minecraft", "net.minecraftforge").rejectPackages("org.lwjgl").scan()) {
-            scanResult.getAllClasses().forEach(c -> {
-                if (c.isInnerClass())
-                    return;
+        val mappings = notchToSRG();
+        val failCount = new AtomicInteger();
 
-                String className = c.getName();
-                try {
-                    Class cls = Class.forName(c.loadClass(true).getCanonicalName());
-                    setOfAllClasses.add(cls);
-                    setOfAllObjects.add(ReflectionFactory.getReflectionFactory().newConstructorForSerialization(cls).newInstance());
-                    LOG.info("Successfully loaded: " + className);
-                } catch (Throwable t) {
-                    failCount.getAndIncrement();
-                    LOG.warn("Failed to load: " + className);
+        @Cleanup val scanResult = new ClassGraph().enableAllInfo().rejectPackages(EXCLUDED_PACKAGES).scan();
+        scanResult.getAllClasses().forEach(c -> {
+            var className = c.getName();
+            if (className.contains("$")) {
+                val index = className.indexOf("$");
+                val prefix = className.substring(0, index);
+                if (mappings.containsKey(prefix)) {
+                    className = mappings.get(prefix) + className.substring(index);
                 }
-            });
-        }
+            } else if (mappings.containsKey(className)) {
+                className = mappings.get(className);
+            }
+
+            try {
+                loadedClasses.add(Class.forName(className));
+                LOG.info("Successfully loaded: " + className);
+            } catch (Throwable t) {
+                failCount.getAndIncrement();
+                LOG.warn("Failed to load: " + className);
+            }
+        });
 
         LOG.info("Loading complete!");
-        LOG.info("Tried: " + (setOfAllClasses.size() + failCount.get()));
-        LOG.info("Succeeded: " + setOfAllClasses.size());
+        LOG.info("Tried: " + (loadedClasses.size() + failCount.get()));
+        LOG.info("Succeeded: " + loadedClasses.size());
         LOG.info("Failed: " + failCount);
 
-        try {
-            Class cls = Class.forName("net.minecraft.world.chunk.Chunk");
-            cls.getDeclaredConstructor(null).newInstance();
-        } catch (Throwable ignored) {
+        iSleep();
+    }
+
+    @SneakyThrows
+    private void iSleep() {
+        LOG.info("And now, iSleep.");
+        Thread.sleep(100000000);
+    }
+
+    @SneakyThrows
+    private Map<String, String> notchToSRG() {
+        val notchToSRG = new HashMap<String, String>();
+        val in = getClass().getResourceAsStream("/notch-srg.srg");
+        val data = new ByteArrayOutputStream();
+        int theByte;
+        while ((theByte = in.read()) != -1) {
+            data.write(theByte);
         }
+        in.close();
+
+        val lines = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(data.toByteArray())).toString().split("\n");
+
+        Arrays.asList(lines).forEach(line -> {
+            if (!line.startsWith("CL: ")) return;
+            String[] parts = line.split(" ");
+            notchToSRG.put(parts[1], parts[2].replace('/', '.'));
+        });
+        return notchToSRG;
     }
 }

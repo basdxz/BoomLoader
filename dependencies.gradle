@@ -1,6 +1,9 @@
 // Add your dependencies here
 
 dependencies {
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+
     compileOnly("io.github.classgraph:classgraph:4.8.138")
 
     compile("com.falsepattern:falsepatternlib:1.7.10-0.3.2:dev") {
