@@ -2,6 +2,7 @@ package com.basdxz.boomload;
 
 
 import com.falsepattern.lib.dependencies.DependencyLoader;
+import com.falsepattern.lib.dependencies.Library;
 import com.falsepattern.lib.dependencies.SemanticVersion;
 import com.google.common.collect.ImmutableSet;
 import cpw.mods.fml.common.Mod;
@@ -27,7 +28,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Mod(modid = Tags.MODID, version = Tags.VERSION, name = Tags.MODNAME, acceptedMinecraftVersions = "[1.7.10]",
-        dependencies = "required-after:falsepatternlib;after:*")
+     dependencies = "required-after:falsepatternlib;after:*")
 public class BoomLoad {
     private static final Logger LOG = LogManager.getLogger(Tags.MODNAME);
 
@@ -58,20 +59,22 @@ public class BoomLoad {
             "com.google",
             "com.typesafe",
             "com.mojang"
-    );
+                                                                       );
     public static final Set<String> EXCLUDED_CLASSES = ImmutableSet.of();//"com.rwtema.extrautils.core.TestTransformer"
     public static final Set<Class> loadedClasses = new HashSet<>();
 
     static {
         DependencyLoader.addMavenRepo("https://repo1.maven.org/maven2/");
-        DependencyLoader.builder()
-                .loadingModId(Tags.MODID)
-                .groupId("io.github.classgraph")
-                .artifactId("classgraph")
-                .minVersion(new SemanticVersion(4, 8, 138))
-                .maxVersion(new SemanticVersion(4, 8, Integer.MAX_VALUE))
-                .preferredVersion(new SemanticVersion(4, 8, 138))
-                .build();
+        DependencyLoader.loadLibraries(
+                Library.builder()
+                       .loadingModId(Tags.MODID)
+                       .groupId("io.github.classgraph")
+                       .artifactId("classgraph")
+                       .minVersion(new SemanticVersion(4, 8, 138))
+                       .maxVersion(new SemanticVersion(4, 8, Integer.MAX_VALUE))
+                       .preferredVersion(new SemanticVersion(4, 8, 138))
+                       .build());
+        ;
     }
 
     @Mod.EventHandler
