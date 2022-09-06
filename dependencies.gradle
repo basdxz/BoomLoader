@@ -6,7 +6,7 @@ dependencies {
 
     compileOnly("io.github.classgraph:classgraph:4.8.138")
 
-    compile("com.falsepattern:falsepatternlib:1.7.10-0.3.2:dev") {
+    compile("com.falsepattern:falsepatternlib-mc1.7.10:0.10.10:dev") {
         transitive = false
     }
 }

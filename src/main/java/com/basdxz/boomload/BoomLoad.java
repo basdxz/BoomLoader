@@ -1,17 +1,24 @@
 package com.basdxz.boomload;
 
-import com.falsepattern.lib.api.DependencyLoader;
-import com.falsepattern.lib.api.SemanticVersion;
+
+import com.falsepattern.lib.dependencies.DependencyLoader;
+import com.falsepattern.lib.dependencies.SemanticVersion;
 import com.google.common.collect.ImmutableSet;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import io.github.classgraph.ClassGraph;
+import io.github.classgraph.Resource;
+import io.github.classgraph.ScanResult;
 import lombok.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.opengl.*;
 import sun.misc.Unsafe;
 
+import javax.imageio.ImageIO;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
@@ -70,6 +77,7 @@ public class BoomLoad {
     @Mod.EventHandler
     @SneakyThrows
     public void postInit(FMLPostInitializationEvent event) {
+        System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION));
         cheekySecurity();
 
         val mappings = notchToSRG();
@@ -106,6 +114,18 @@ public class BoomLoad {
         LOG.info("Tried: " + (loadedClasses.size() + failCount.get()));
         LOG.info("Succeeded: " + loadedClasses.size());
         LOG.info("Failed: " + failCount);
+
+        try (ScanResult scanResult2 = new ClassGraph().scan()) {
+            scanResult.getResourcesWithExtension("png").
+                      forEachByteArrayThrowingIOException((Resource res, byte[] fileContent) -> {
+                          val bis = new ByteArrayInputStream(fileContent);
+                          val bImage2 = ImageIO.read(bis);
+                          val imageFile = new File("imgdump", res.getPath());
+                          new File(imageFile.getParentFile().getAbsolutePath()).mkdirs();
+                          ImageIO.write(bImage2, "png", imageFile);
+                          LOG.info("Dumped image: " + res.getPath());
+                      });
+        }
 
         iSleep();
     }
