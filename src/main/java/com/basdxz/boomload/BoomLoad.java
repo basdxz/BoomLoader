@@ -70,9 +70,9 @@ public class BoomLoad {
                        .loadingModId(Tags.MODID)
                        .groupId("io.github.classgraph")
                        .artifactId("classgraph")
-                       .minVersion(new SemanticVersion(4, 8, 138))
+                       .minVersion(new SemanticVersion(4, 8, 157))
                        .maxVersion(new SemanticVersion(4, 8, Integer.MAX_VALUE))
-                       .preferredVersion(new SemanticVersion(4, 8, 138))
+                       .preferredVersion(new SemanticVersion(4, 8, 157))
                        .build());
         ;
     }

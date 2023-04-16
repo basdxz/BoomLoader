@@ -1,12 +1,11 @@
-// Add your dependencies here
-
 dependencies {
-    compileOnly 'org.projectlombok:lombok:1.18.22'
-    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+    // Lombok
+    compileOnly("org.projectlombok:lombok:1.18.26")
+    annotationProcessor("org.projectlombok:lombok:1.18.26")
 
-    compileOnly("io.github.classgraph:classgraph:4.8.138")
+    // ClassGraph
+    compileOnly("io.github.classgraph:classgraph:4.8.157")
 
-    compile("com.falsepattern:falsepatternlib-mc1.7.10:0.10.10:dev") {
-        transitive = false
-    }
+    // FalsePatternLib
+    implementation("com.falsepattern:falsepatternlib-mc1.7.10:0.11.2:dev")
 }

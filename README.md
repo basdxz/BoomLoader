@@ -1,6 +1,5 @@
-# BoomLoad
+# BoomLoader
 Loads all your Minecraft classes in one big boom, HAYO!!!
-
 
 Hello fellow traveller of the void, I know you've asked yourself this question many, many times.
 
