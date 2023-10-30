@@ -1,15 +1,14 @@
 package com.basdxz.boomload;
 
 
+import com.basdxz.boomload.asm.Exclusions;
+import com.basdxz.boomload.asm.OpenGLFunctionDumper;
 import com.falsepattern.lib.dependencies.DependencyLoader;
 import com.falsepattern.lib.dependencies.Library;
 import com.falsepattern.lib.dependencies.SemanticVersion;
-import com.google.common.collect.ImmutableSet;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import io.github.classgraph.ClassGraph;
-import io.github.classgraph.Resource;
-import io.github.classgraph.ScanResult;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -18,10 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
-import javax.imageio.ImageIO;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -38,35 +34,7 @@ import static com.basdxz.boomload.Tags.*;
 public final class BoomLoader {
     private static final Logger LOG = LogManager.getLogger(MOD_NAME);
 
-    public static final Set<String> EXCLUDED_PACKAGES = ImmutableSet.of(
-            "org.lwjgl",
-            "com.sun",
-            "jdk",
-            "javafx",
-            "scala",
-            "com.ibm",
-            "io.netty",
-            "akka",
-            "java",
-            "sun",
-            "netscape",
-            "com.jcraft",
-            "org.apache",
-            "tv.twitch",
-            "paulscode",
-            "org.multimc",
-            "nonapi.io.github.classgraph",
-            "net.java",
-            "LZMA",
-            "joptsimple",
-            "javax",
-            "ibxm",
-            "gnu.trove",
-            "com.google",
-            "com.typesafe",
-            "com.mojang");
-    public static final Set<String> EXCLUDED_CLASSES = ImmutableSet.of();//"com.rwtema.extrautils.core.TestTransformer"
-    public static final Set<Class> loadedClasses = new HashSet<>();
+    public static final Set<Class<?>> LOADED_CLASSES = new HashSet<>();
 
     static {
         DependencyLoader.addMavenRepo("https://repo1.maven.org/maven2/");
@@ -93,10 +61,10 @@ public final class BoomLoader {
 
         @Cleanup val scanResult = new ClassGraph()
                 .enableAllInfo()
-                .rejectPackages(EXCLUDED_PACKAGES.toArray(new String[0])).scan();
+                .rejectPackages(Exclusions.EXCLUDED_PACKAGES.toArray(new String[0])).scan();
         scanResult.getAllClasses().forEach(c -> {
             var className = c.getName();
-            if (EXCLUDED_CLASSES.contains(className))
+            if (Exclusions.EXCLUDED_CLASSES.contains(className))
                 return;
 
             if (className.contains("$")) {
@@ -110,7 +78,7 @@ public final class BoomLoader {
             }
 
             try {
-                loadedClasses.add(Class.forName(className));
+                LOADED_CLASSES.add(Class.forName(className));
                 LOG.info("Successfully loaded: " + className);
             } catch (Throwable t) {
                 failCount.getAndIncrement();
@@ -119,27 +87,29 @@ public final class BoomLoader {
         });
 
         LOG.info("Loading complete!");
-        LOG.info("Tried: " + (loadedClasses.size() + failCount.get()));
-        LOG.info("Succeeded: " + loadedClasses.size());
+        LOG.info("Tried: " + (LOADED_CLASSES.size() + failCount.get()));
+        LOG.info("Succeeded: " + LOADED_CLASSES.size());
         LOG.info("Failed: " + failCount);
 
-        try (ScanResult scanResult2 = new ClassGraph().scan()) {
-            scanResult.getResourcesWithExtension("png").
-                      forEachByteArrayThrowingIOException((Resource res, byte[] fileContent) -> {
-                          val bis = new ByteArrayInputStream(fileContent);
-                          val bImage2 = ImageIO.read(bis);
-                          val imageFile = new File("imgdump", res.getPath());
-                          new File(imageFile.getParentFile().getAbsolutePath()).mkdirs();
-                          ImageIO.write(bImage2, "png", imageFile);
-                          LOG.info("Dumped image: " + res.getPath());
-                      });
-        }
+//        try (ScanResult scanResult2 = new ClassGraph().scan()) {
+//            scanResult.getResourcesWithExtension("png").
+//                      forEachByteArrayThrowingIOException((Resource res, byte[] fileContent) -> {
+//                          val bis = new ByteArrayInputStream(fileContent);
+//                          val bImage2 = ImageIO.read(bis);
+//                          val imageFile = new File("imgdump", res.getPath());
+//                          new File(imageFile.getParentFile().getAbsolutePath()).mkdirs();
+//                          ImageIO.write(bImage2, "png", imageFile);
+//                          LOG.info("Dumped image: " + res.getPath());
+//                      });
+//        }
 
         iSleep();
     }
 
     @SneakyThrows
     private void iSleep() {
+        OpenGLFunctionDumper.dumpOpenGLFunctions();
+
         LOG.info("And now, iSleep.");
         Thread.sleep(100000000);
     }
