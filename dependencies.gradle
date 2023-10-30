@@ -1,11 +1,11 @@
 dependencies {
-    // Lombok
-    compileOnly("org.projectlombok:lombok:1.18.26")
-    annotationProcessor("org.projectlombok:lombok:1.18.26")
+    // FalsePatternLib
+    implementation("com.falsepattern:falsepatternlib-mc1.7.10:0.12.5:dev")
 
     // ClassGraph
-    compileOnly("io.github.classgraph:classgraph:4.8.157")
+    compileOnly("io.github.classgraph:classgraph:4.8.163")
 
-    // FalsePatternLib
-    implementation("com.falsepattern:falsepatternlib-mc1.7.10:0.11.2:dev")
+    // Lombok
+    compileOnly("org.projectlombok:lombok:1.18.30")
+    annotationProcessor("org.projectlombok:lombok:1.18.30")
 }

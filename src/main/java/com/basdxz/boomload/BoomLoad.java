@@ -10,10 +10,13 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.Resource;
 import io.github.classgraph.ScanResult;
-import lombok.*;
+import lombok.Cleanup;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.var;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.opengl.*;
+import org.lwjgl.opengl.GL11;
 import sun.misc.Unsafe;
 
 import javax.imageio.ImageIO;
@@ -70,9 +73,9 @@ public class BoomLoad {
                        .loadingModId(Tags.MODID)
                        .groupId("io.github.classgraph")
                        .artifactId("classgraph")
-                       .minVersion(new SemanticVersion(4, 8, 157))
+                       .minVersion(new SemanticVersion(4, 8, 163))
                        .maxVersion(new SemanticVersion(4, 8, Integer.MAX_VALUE))
-                       .preferredVersion(new SemanticVersion(4, 8, 157))
+                       .preferredVersion(new SemanticVersion(4, 8, 163))
                        .build());
         ;
     }
