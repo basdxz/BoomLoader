@@ -1,12 +1,11 @@
 package com.basdxz.boomload;
 
-// Use this class for Strings only. Do not import any classes here. It will lead to issues with Mixins if in use!
+import lombok.experimental.UtilityClass;
 
-public class Tags {
-
-    // GRADLETOKEN_* will be replaced by your configuration values at build time
-    public static final String MODID = "GRADLETOKEN_MODID";
-    public static final String MODNAME = "GRADLETOKEN_MODNAME";
+@UtilityClass
+public final class Tags {
+    public static final String MOD_ID = "GRADLETOKEN_MODID";
+    public static final String MOD_NAME = "GRADLETOKEN_MODNAME";
     public static final String VERSION = "GRADLETOKEN_VERSION";
-    public static final String GROUPNAME = "GRADLETOKEN_GROUPNAME";
+    public static final String GROUP_NAME = "GRADLETOKEN_GROUPNAME";
 }

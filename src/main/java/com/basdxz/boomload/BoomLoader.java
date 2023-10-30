@@ -17,23 +17,26 @@ import lombok.var;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
-import sun.misc.Unsafe;
 
 import javax.imageio.ImageIO;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Mod(modid = Tags.MODID, version = Tags.VERSION, name = Tags.MODNAME, acceptedMinecraftVersions = "[1.7.10]",
+import static com.basdxz.boomload.SecurityShigsploder.shigsplodeSecurity;
+import static com.basdxz.boomload.Tags.*;
+
+@Mod(modid = MOD_ID,
+     version = VERSION,
+     name = MOD_NAME,
+     acceptedMinecraftVersions = "[1.7.10]",
      dependencies = "required-after:falsepatternlib;after:*")
-public class BoomLoad {
-    private static final Logger LOG = LogManager.getLogger(Tags.MODNAME);
+public final class BoomLoader {
+    private static final Logger LOG = LogManager.getLogger(MOD_NAME);
 
     public static final Set<String> EXCLUDED_PACKAGES = ImmutableSet.of(
             "org.lwjgl",
@@ -61,8 +64,7 @@ public class BoomLoad {
             "gnu.trove",
             "com.google",
             "com.typesafe",
-            "com.mojang"
-                                                                       );
+            "com.mojang");
     public static final Set<String> EXCLUDED_CLASSES = ImmutableSet.of();//"com.rwtema.extrautils.core.TestTransformer"
     public static final Set<Class> loadedClasses = new HashSet<>();
 
@@ -70,7 +72,7 @@ public class BoomLoad {
         DependencyLoader.addMavenRepo("https://repo1.maven.org/maven2/");
         DependencyLoader.loadLibraries(
                 Library.builder()
-                       .loadingModId(Tags.MODID)
+                       .loadingModId(MOD_ID)
                        .groupId("io.github.classgraph")
                        .artifactId("classgraph")
                        .minVersion(new SemanticVersion(4, 8, 163))
@@ -84,7 +86,7 @@ public class BoomLoad {
     @SneakyThrows
     public void postInit(FMLPostInitializationEvent event) {
         System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION));
-        cheekySecurity();
+        shigsplodeSecurity();
 
         val mappings = notchToSRG();
         val failCount = new AtomicInteger();
@@ -134,27 +136,6 @@ public class BoomLoad {
         }
 
         iSleep();
-    }
-
-    @SneakyThrows
-    private void cheekySecurity() {
-        Method gdf0 = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
-        gdf0.setAccessible(true);
-        Field[] fields = (Field[]) gdf0.invoke(System.class, false);
-        Field securityField = null;
-        for (val field : fields) {
-            if (field.getName().equals("security")) {
-                securityField = field;
-                break;
-            }
-        }
-        Field unsafe = Unsafe.class.getDeclaredField("theUnsafe");
-        unsafe.setAccessible(true);
-        Unsafe theUnsafe = (Unsafe) unsafe.get(null);
-        Object theStaticSystem = theUnsafe.staticFieldBase(securityField);
-        long theSecurityOffset = theUnsafe.staticFieldOffset(securityField);
-        theUnsafe.putObject(theStaticSystem, theSecurityOffset, null);
-        System.setSecurityManager(new ExplosiveManager());
     }
 
     @SneakyThrows
